@@ -2,7 +2,7 @@
 
 This repository contains some sample applications demonstrating how to use JSONPad.
 
-## [BlogPad](/blogpad)
+## [BlogPad](blogpad/index.html)
 
 Demonstrates basic functions of JSONPad, including the Identities API.
 

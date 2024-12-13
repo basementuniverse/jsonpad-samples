@@ -10,7 +10,7 @@ Check out the live demo here: https://basementuniverse.github.io/jsonpad-samples
 
 ## [Notice Board](noticeboard/index.html)
 
-Demonstrates the realtime API to build a basic chat forum which updates in realtime.
+Demonstrates the realtime API with a simple notice board where users can place notes on the screen.
 
 Check out the live demo here: https://basementuniverse.github.io/jsonpad-samples/noticeboard/
 

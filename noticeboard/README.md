@@ -76,4 +76,4 @@ If you want to set up your own version of this app:
 ]
 ```
 
-5. once you've created the token, copy the token value, list path name, and list idinto `app.js` (the constants in the top 3 lines) 
+5. once you've created the token, copy the token value, list path name, and list id into `app.js` (the constants in the top 3 lines) 

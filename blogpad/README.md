@@ -96,4 +96,4 @@ If you want to set up your own version of this app:
 ]
 ```
 
-5. once you've created the token, copy the token value and paste it into `app.js` where we construct the JSONPad SDK instance (line ~7)
+5. once you've created the token, copy the token value and paste it into `app.js` on line 1.

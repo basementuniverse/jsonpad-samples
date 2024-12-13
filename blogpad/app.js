@@ -1,10 +1,12 @@
+const JSONPAD_PUBLIC_TOKEN = 'GCjYHT+zjexmdj3Yie7jOQsmQ8W8czF9';
+
 const { createApp } = Vue;
 
 const app = createApp({
   data() {
     return {
       jsonpad: new JSONPad.default(
-        'GCjYHT+zjexmdj3Yie7jOQsmQ8W8czF9',
+        JSONPAD_PUBLIC_TOKEN,
         localStorage.getItem('identity-group') ?? undefined,
         localStorage.getItem('identity-token') ?? undefined
       ),

@@ -2,6 +2,8 @@
 
 This is a demo app for [jsonpad.io](https://jsonpad.io).
 
+Check out the live demo here: https://basementuniverse.github.io/jsonpad-samples/blogpad/
+
 It's a simple blogging platform which allows users to register, create articles, edit and delete them.
 
 Everyone can read articles, but only the user who created an article can edit or delete it.

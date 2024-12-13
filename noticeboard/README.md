@@ -2,6 +2,8 @@
 
 This is a demo app for [jsonpad.io](https://jsonpad.io).
 
+Check out the live demo here: https://basementuniverse.github.io/jsonpad-samples/noticeboard/
+
 Click on the screen to add a notice at that location, then edit or delete notices.
 
 Changes will be synced to everyone in realtime.

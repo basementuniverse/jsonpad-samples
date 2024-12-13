@@ -1,0 +1,61 @@
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  background-color: #e5e5e5;
+  width: 100%;
+  height: 100%;
+}
+
+.notice {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.notice.yellow {
+  background-color: #fca311;
+  border: 3px solid #e76f51;
+}
+
+.notice.red {
+  background-color: #ce4257;
+  border: 3px solid #720026;
+}
+
+.notice.blue {
+  background-color: #219ebc;
+  border: 3px solid #023047;
+}
+
+.notice.green {
+  background-color: #80ed99;
+  border: 3px solid #2a9d8f;
+}
+
+.notice textarea {
+  border: none;
+  background-color: transparent;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  font-family: Bradley Hand, cursive;
+  font-size: 1.5em;
+  color: #111;
+}
+
+.notice .delete-notice-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}

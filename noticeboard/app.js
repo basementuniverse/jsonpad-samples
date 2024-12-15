@@ -6,39 +6,24 @@ const jsonpad = new JSONPad.default(JSONPAD_PUBLIC_TOKEN);
 const jsonpadRealtime = new JSONPadRealtime.default(JSONPAD_PUBLIC_TOKEN);
 
 jsonpadRealtime.listen(
-  [
-    'item-created',
-    'item-updated',
-    'item-deleted',
-  ],
+  ['item-created', 'item-updated', 'item-deleted'],
   [JSONPAD_LIST_ID],
   ['*']
 );
 
 jsonpadRealtime.addEventListener('item-created', event => {
-  createNoticeElement(
-    event.detail.model.id,
-    JSON.parse(event.detail.model.data)
-  );
+  createNoticeElement(event.detail.model.id, event.detail.model.data);
 });
 
 jsonpadRealtime.addEventListener('item-updated', event => {
-  updateNoticeElement(
-    event.detail.model.id,
-    JSON.parse(event.detail.model.data)
-  );
+  updateNoticeElement(event.detail.model.id, event.detail.model.data);
 });
 
 jsonpadRealtime.addEventListener('item-deleted', event => {
   removeNoticeElement(event.detail.model.id);
 });
 
-const colour = [
-  'red',
-  'green',
-  'blue',
-  'yellow',
-][randomIntBetween(0, 3)];
+const colour = ['red', 'green', 'blue', 'yellow'][randomIntBetween(0, 3)];
 const container = document.querySelector('.container');
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -53,45 +38,39 @@ container.addEventListener('click', event => {
 });
 
 function initialise() {
-  jsonpad.fetchItems(
-    JSONPAD_LIST,
-    {
+  jsonpad
+    .fetchItems(JSONPAD_LIST, {
       includeData: true,
       limit: 100,
-    }
-  ).then(response => {
-    for (const item of response.data) {
-      createNoticeElement(item.id, item.data);
-    }
-  });
+    })
+    .then(response => {
+      for (const item of response.data) {
+        createNoticeElement(item.id, item.data);
+      }
+    });
 }
 
 function addNotice(x, y) {
-  jsonpad.createItem(
-    JSONPAD_LIST,
-    {
+  jsonpad
+    .createItem(JSONPAD_LIST, {
       data: {
         colour,
         x,
         y,
         content: '',
       },
-    }
-  ).then(item => {
-    createNoticeElement(item.id, item.data);
-  });
+    })
+    .then(item => {
+      createNoticeElement(item.id, item.data);
+    });
 }
 
 const debouncedAddNotice = debounce(addNotice, 500);
 
 function editNotice(id, content) {
-  jsonpad.updateItemData(
-    JSONPAD_LIST,
-    id,
-    {
-      content,
-    }
-  );
+  jsonpad.updateItemData(JSONPAD_LIST, id, {
+    content,
+  });
 }
 
 const debouncedEditNotice = debounce(editNotice, 500);

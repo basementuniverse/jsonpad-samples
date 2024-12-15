@@ -1,4 +1,5 @@
 const JSONPAD_PUBLIC_TOKEN = 'GCjYHT+zjexmdj3Yie7jOQsmQ8W8czF9';
+const JSONPAD_LIST = 'blogpad-articles';
 
 const { createApp } = Vue;
 
@@ -16,21 +17,21 @@ const app = createApp({
       isRegistering: false,
       authForm: {
         name: '',
-        password: ''
+        password: '',
       },
       authError: null,
       articles: [],
       newArticle: {
         title: '',
-        content: ''
+        content: '',
       },
       editingArticle: null,
       pagination: {
         page: 1,
         limit: 3,
-        total: 0
-      }
-    }
+        total: 0,
+      },
+    };
   },
 
   async created() {
@@ -43,7 +44,7 @@ const app = createApp({
 
     this.loadArticles();
   },
-  
+
   methods: {
     async handleAuth() {
       try {
@@ -51,7 +52,7 @@ const app = createApp({
           await this.jsonpad.registerIdentity({
             name: this.authForm.name,
             password: this.authForm.password,
-            group: 'blogpad'
+            group: 'blogpad',
           });
           this.closeRegisterModal();
         }
@@ -59,7 +60,7 @@ const app = createApp({
         const [identity, token] = await this.jsonpad.loginIdentity({
           name: this.authForm.name,
           password: this.authForm.password,
-          group: 'blogpad'
+          group: 'blogpad',
         });
         this.closeLoginModal();
 
@@ -67,7 +68,7 @@ const app = createApp({
           localStorage.setItem('identity-group', identity.group);
           localStorage.setItem('identity-token', token);
         }
-        
+
         this.currentUser = identity;
         this.authError = null;
         this.loadArticles();
@@ -75,7 +76,7 @@ const app = createApp({
         this.authError = error.message;
       }
     },
-    
+
     async handleLogout() {
       try {
         await this.jsonpad.logoutIdentity();
@@ -87,11 +88,11 @@ const app = createApp({
         console.error('Logout error:', error);
       }
     },
-    
+
     async loadArticles() {
       try {
         const response = await this.jsonpad.fetchItems(
-          'blogpad-articles',
+          JSONPAD_LIST,
           {
             page: this.pagination.page,
             limit: this.pagination.limit,
@@ -109,20 +110,20 @@ const app = createApp({
         console.error('Error loading articles:', error);
       }
     },
-    
+
     async createArticle() {
       if (!this.newArticle.title || !this.newArticle.content) return;
-      
+
       try {
-        await this.jsonpad.createItem('blogpad-articles', {
+        await this.jsonpad.createItem(JSONPAD_LIST, {
           data: {
             title: this.newArticle.title,
             content: this.newArticle.content,
             author: this.currentUser.name,
             date: '$jsonpad-var:now',
-          }
+          },
         });
-        
+
         this.newArticle.title = '';
         this.newArticle.content = '';
         this.closeCreateArticleModal();
@@ -135,7 +136,7 @@ const app = createApp({
     async editArticle() {
       try {
         await this.jsonpad.updateItemData(
-          'blogpad-articles',
+          JSONPAD_LIST,
           this.editingArticle.id,
           this.editingArticle.data
         );
@@ -146,16 +147,16 @@ const app = createApp({
         console.error('Error updating article:', error);
       }
     },
-    
+
     async deleteArticle(articleId) {
       try {
-        await this.jsonpad.deleteItem('blogpad-articles', articleId);
+        await this.jsonpad.deleteItem(JSONPAD_LIST, articleId);
         this.loadArticles();
       } catch (error) {
         console.error('Error deleting article:', error);
       }
     },
-    
+
     showLoginModal() {
       this.isRegistering = false;
       this.authForm = { name: '', password: '' };
@@ -166,7 +167,7 @@ const app = createApp({
     closeLoginModal() {
       this.$refs.loginDialog.close();
     },
-    
+
     showRegisterModal() {
       this.isRegistering = true;
       this.authForm = { name: '', password: '' };
@@ -192,14 +193,17 @@ const app = createApp({
       this.editingArticle = { ...article };
       this.$refs.editArticleDialog.showModal();
     },
-    
+
     closeEditArticleModal() {
       this.editingArticle = null;
       this.$refs.editArticleDialog.close();
     },
 
     nextPage() {
-      if (this.pagination.page * this.pagination.limit < this.pagination.total) {
+      if (
+        this.pagination.page * this.pagination.limit <
+        this.pagination.total
+      ) {
         this.pagination.page++;
         this.loadArticles();
       }
@@ -211,7 +215,7 @@ const app = createApp({
         this.loadArticles();
       }
     },
-  }
+  },
 });
 
 app.mount('#app');

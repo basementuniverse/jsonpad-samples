@@ -1,13 +1,12 @@
 const JSONPAD_PUBLIC_TOKEN = 'AtMBzWC626liAQKvleIJeUhOSNWoHaJo';
 const JSONPAD_LIST = 'notice-board-notices';
-const JSONPAD_LIST_ID = 'b7195be9-46a6-4427-b54e-bf99c8dae056';
 
 const jsonpad = new JSONPad.default(JSONPAD_PUBLIC_TOKEN);
 const jsonpadRealtime = new JSONPadRealtime.default(JSONPAD_PUBLIC_TOKEN);
 
 jsonpadRealtime.listen(
   ['item-created', 'item-updated', 'item-deleted'],
-  [JSONPAD_LIST_ID],
+  [JSONPAD_LIST],
   ['*']
 );
 

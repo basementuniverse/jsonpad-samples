@@ -1,0 +1,15 @@
+// Notice board notes.
+//
+// Anyone with the page can add, edit, move and delete notes. There are no
+// identities here: the token's permissions allow all of that, and these rules
+// don't authorise anything.
+//
+// The list's JSON schema already says what a note looks like: a colour, a
+// position on the board, and up to 500 characters of text. What a schema can't
+// do is compare a note with how it was before, and that's what this rule is
+// for. The colour shows who wrote a note, so nobody can recolour someone
+// else's.
+
+require update "a note keeps its colour":
+  unchanged("/colour")
+  else "a note's colour can't be changed";

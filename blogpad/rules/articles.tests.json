@@ -1,0 +1,165 @@
+{
+  "$schema": "https://jsonpad.io/schema/rules-tests-v1.json",
+  "defaults": {
+    "now": "2026-01-01T12:00:00Z"
+  },
+  "identities": {
+    "alice": {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "name": "alice",
+      "displayName": "Alice"
+    },
+    "bob": {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "name": "bob",
+      "displayName": "Bob"
+    }
+  },
+  "tests": [
+    {
+      "name": "an author can publish an article",
+      "action": "create",
+      "expect": "allow",
+      "identity": "alice",
+      "new": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2026-01-01T12:00:00Z"
+      }
+    },
+    {
+      "name": "an article can't be published in someone else's name",
+      "action": "create",
+      "expect": {
+        "fail": "an article's author must be the person writing it"
+      },
+      "identity": "bob",
+      "new": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2026-01-01T12:00:00Z"
+      }
+    },
+    {
+      "name": "an article can't be published without signing in",
+      "action": "create",
+      "expect": {
+        "fail": "an article's author must be the person writing it"
+      },
+      "new": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2026-01-01T12:00:00Z"
+      }
+    },
+    {
+      "name": "an article can't be backdated",
+      "action": "create",
+      "expect": {
+        "fail": "write \"$jsonpad-var:now\" to /publishedAt"
+      },
+      "identity": "alice",
+      "new": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2020-01-01T00:00:00Z"
+      }
+    },
+    {
+      "name": "an author can edit their article",
+      "action": "update",
+      "expect": "allow",
+      "identity": "alice",
+      "old": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2025-12-01T09:00:00Z"
+      },
+      "new": {
+        "title": "Hello again",
+        "summary": "My first article.",
+        "content": "Edited.",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2025-12-01T09:00:00Z"
+      }
+    },
+    {
+      "name": "an article can't be handed to someone else",
+      "action": "update",
+      "expect": {
+        "fail": "an article's author must be the person writing it"
+      },
+      "identity": "alice",
+      "old": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2025-12-01T09:00:00Z"
+      },
+      "new": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "bob",
+        "publishedAt": "2025-12-01T09:00:00Z"
+      }
+    },
+    {
+      "name": "the publication date can't be changed",
+      "action": "update",
+      "expect": {
+        "fail": "an article's publication date can't be changed"
+      },
+      "identity": "alice",
+      "old": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2025-12-01T09:00:00Z"
+      },
+      "new": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2026-01-01T12:00:00Z"
+      }
+    },
+    {
+      "name": "deleting is left to the token's permissions",
+      "action": "delete",
+      "expect": "allow",
+      "identity": "alice",
+      "old": {
+        "title": "Hello",
+        "summary": "My first article.",
+        "content": "Hello, world!",
+        "category": "general",
+        "author": "alice",
+        "publishedAt": "2025-12-01T09:00:00Z"
+      }
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://jsonpad.io/schema/sync-v1.json",
+  "scope": "blogpad",
+  "lists": {
+    "blogpad-articles": {
+      "name": "BlogPad Articles",
+      "description": "One item per article. Anyone can read them, and only an article's author can change it.",
+      "tags": ["blogpad"],
+      "indexable": true,
+      "rulesFile": "rules/articles.rules",
+      "rulesTestsFile": "rules/articles.tests.json",
+      "schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "summary",
+          "content",
+          "category",
+          "author",
+          "publishedAt"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "category": {
+            "enum": ["general", "news", "tutorials", "opinion"]
+          },
+          "author": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "indexes": {
+        "title": {
+          "name": "Title",
+          "description": "For sorting articles by title, and for searching",
+          "pointer": "/title",
+          "valueType": "string",
+          "sorting": true,
+          "searching": true
+        },
+        "summary": {
+          "name": "Summary",
+          "description": "For searching",
+          "pointer": "/summary",
+          "valueType": "string",
+          "searching": true
+        },
+        "category": {
+          "name": "Category",
+          "description": "For showing the articles in one category",
+          "pointer": "/category",
+          "valueType": "string",
+          "filtering": true
+        },
+        "published": {
+          "name": "Published",
+          "description": "For sorting articles by date, and for showing recent ones",
+          "pointer": "/publishedAt",
+          "valueType": "date",
+          "sorting": true,
+          "filtering": true
+        }
+      }
+    }
+  }
+}

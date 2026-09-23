@@ -1,219 +1,438 @@
-const JSONPAD_PUBLIC_TOKEN = 'GCjYHT+zjexmdj3Yie7jOQsmQ8W8czF9';
+// BlogPad: a blog with no server of its own.
+//
+// Articles are items in a JSONPad list, and authors are JSONPad identities.
+// The list's JSON schema decides what an article looks like, its indexes let
+// JSONPad do the sorting, filtering and searching, and its write rules make
+// sure nobody can publish in someone else's name. See jsonpad-schema.json.
+
 const JSONPAD_LIST = 'blogpad-articles';
+const IDENTITY_GROUP = 'blogpad';
 
-const { createApp } = Vue;
+const PAGE_SIZE = 5;
 
-const app = createApp({
+const CATEGORIES = {
+  general: 'General',
+  news: 'News',
+  tutorials: 'Tutorials',
+  opinion: 'Opinion',
+};
+
+// An author stays signed in between visits: we keep their session token
+function savedSession() {
+  try {
+    return localStorage.getItem('blogpad-session') ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function saveSession(token) {
+  try {
+    if (token) {
+      localStorage.setItem('blogpad-session', token);
+    } else {
+      localStorage.removeItem('blogpad-session');
+    }
+  } catch {}
+}
+
+// Once an author signs in, this client sends their identity with every request
+const jsonpad = new JSONPad.default(
+  JSONPAD_TOKEN,
+  IDENTITY_GROUP,
+  savedSession()
+);
+
+// A request made with an identity only sees the items that identity created,
+// and everyone should see every article, so we read them without one
+const withoutIdentity = { ignore: true };
+
+// -----------------------------------------------------------------------------
+// Talking to JSONPad
+// -----------------------------------------------------------------------------
+
+/**
+ * Make a request, and try it again if JSONPad says we're going too fast
+ *
+ * Every plan limits how quickly an account can make requests. On the free
+ * plan it's one request every 100ms, shared by everyone using the app, so two
+ * requests in a row can be told to slow down (a 429). The error says how many
+ * seconds to wait, rounded up to a whole second, so a short wait is retried
+ * sooner than that. A long one (the per-minute limit) isn't retried at all
+ */
+async function retrying(request, attempts = 5) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await request();
+    } catch (error) {
+      const wait = error?.retryAfter ?? 1;
+      if (error?.status !== 429 || attempt === attempts || wait > 1) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 150 * attempt));
+    }
+  }
+}
+
+/**
+ * Something readable from an SDK error, whose message is the response body
+ */
+function describeError(error) {
+  let body;
+  try {
+    body = JSON.parse(error.message);
+  } catch {
+    return error?.message ?? String(error);
+  }
+
+  switch (body.code) {
+    case 20008: // IDENTITY_NOT_AUTHENTICATED
+      return "That username and password don't match.";
+    case 20003: // IDENTITY_UNABLE_TO_CREATE
+      return 'That username is taken.';
+  }
+
+  // A validation error lists what's wrong with each field
+  const reasons = [...(body.message ?? '').matchAll(/"msg":"([^"]*)"/g)];
+  if (reasons.length > 0) {
+    return reasons.map(([, reason]) => reason).join(', ');
+  }
+
+  return body.message ?? error.message;
+}
+
+// -----------------------------------------------------------------------------
+// The app
+// -----------------------------------------------------------------------------
+
+const markdown = new showdown.Converter({
+  tables: true,
+  strikethrough: true,
+  simplifiedAutoLink: true,
+});
+
+function emptyDraft() {
+  return {
+    id: null,
+    title: '',
+    summary: '',
+    category: 'general',
+    content: '',
+  };
+}
+
+const app = Vue.createApp({
   data() {
     return {
-      jsonpad: new JSONPad.default(
-        JSONPAD_PUBLIC_TOKEN,
-        localStorage.getItem('identity-group') ?? undefined,
-        localStorage.getItem('identity-token') ?? undefined
-      ),
-      showdownConverter: new showdown.Converter(),
-      dayjs: dayjs,
-      currentUser: null,
-      isRegistering: false,
-      authForm: {
-        name: '',
-        password: '',
-      },
-      authError: null,
+      configured: !JSONPAD_TOKEN.startsWith('PASTE'),
+      categories: CATEGORIES,
+      me: null,
       articles: [],
-      newArticle: {
-        title: '',
-        content: '',
+      total: 0,
+      page: 1,
+      loading: false,
+      error: null,
+      filters: {
+        category: '',
+        recent: '',
+        mine: false,
       },
-      editingArticle: null,
-      pagination: {
-        page: 1,
-        limit: 3,
-        total: 0,
-      },
+      sort: 'newest',
+      search: '',
+      searchResults: null,
+      authMode: 'login',
+      authForm: { name: '', password: '' },
+      authError: null,
+      draft: emptyDraft(),
+      draftError: null,
+      saving: false,
     };
   },
 
+  computed: {
+    pages() {
+      return Math.max(1, Math.ceil(this.total / PAGE_SIZE));
+    },
+    shownArticles() {
+      return this.searchResults ?? this.articles;
+    },
+    filtered() {
+      return Object.values(this.filters).some(Boolean);
+    },
+  },
+
+  watch: {
+    filters: {
+      deep: true,
+      handler() {
+        this.page = 1;
+        this.loadArticles();
+      },
+    },
+    sort() {
+      this.page = 1;
+      this.loadArticles();
+    },
+  },
+
   async created() {
-    try {
-      const identity = await this.jsonpad.fetchSelfIdentity();
-      this.currentUser = identity;
-    } catch (error) {
-      console.log('No active session', error);
+    if (!this.configured) {
+      return;
     }
 
-    this.loadArticles();
+    // Check whether the session we saved last time is still good. If it's
+    // expired, forget it and start again without it
+    if (savedSession()) {
+      try {
+        this.me = await retrying(() => jsonpad.fetchSelfIdentity());
+      } catch (error) {
+        if (error?.status === 401) {
+          saveSession(null);
+          window.location.reload();
+          return;
+        }
+        this.error = describeError(error);
+      }
+    }
+
+    await this.loadArticles();
   },
 
   methods: {
-    async handleAuth() {
-      try {
-        if (this.isRegistering) {
-          await this.jsonpad.registerIdentity({
-            name: this.authForm.name,
-            password: this.authForm.password,
-            group: 'blogpad',
-          });
-          this.closeRegisterModal();
-        }
-
-        const [identity, token] = await this.jsonpad.loginIdentity({
-          name: this.authForm.name,
-          password: this.authForm.password,
-          group: 'blogpad',
-        });
-        this.closeLoginModal();
-
-        if (identity && token) {
-          localStorage.setItem('identity-group', identity.group);
-          localStorage.setItem('identity-token', token);
-        }
-
-        this.currentUser = identity;
-        this.authError = null;
-        this.loadArticles();
-      } catch (error) {
-        this.authError = error.message;
-      }
-    },
-
-    async handleLogout() {
-      try {
-        await this.jsonpad.logoutIdentity();
-        this.currentUser = null;
-
-        localStorage.removeItem('identity-group');
-        localStorage.removeItem('identity-token');
-      } catch (error) {
-        console.error('Logout error:', error);
-      }
-    },
+    // -------------------------------------------------------------------------
+    // Reading articles
+    // -------------------------------------------------------------------------
 
     async loadArticles() {
+      // Each of these is done by JSONPad, using the list's indexes (their
+      // path names are the parameter names) or an item's own fields
+      const parameters = {
+        page: this.page,
+        limit: PAGE_SIZE,
+        includeData: true,
+        ...{
+          newest: { order: 'published', direction: 'desc' },
+          oldest: { order: 'published', direction: 'asc' },
+          title: { order: 'title', direction: 'asc' },
+        }[this.sort],
+      };
+
+      if (this.filters.category) {
+        parameters.category = this.filters.category;
+      }
+
+      if (this.filters.recent) {
+        const since = dayjs().subtract(Number(this.filters.recent), 'day');
+        parameters.published = `after:${since.format('YYYY-MM-DD')}`;
+      }
+
+      // Every item remembers the identity that created it, and can be
+      // filtered by it
+      if (this.filters.mine && this.me) {
+        parameters.identityId = this.me.id;
+      }
+
+      this.loading = true;
+      this.error = null;
+
       try {
-        const response = await this.jsonpad.fetchItems(
-          JSONPAD_LIST,
-          {
-            page: this.pagination.page,
-            limit: this.pagination.limit,
-            order: 'createdAt',
-            direction: 'desc',
-            includeData: true,
-          },
-          {
-            ignore: true,
-          }
+        const response = await retrying(() =>
+          jsonpad.fetchItems(JSONPAD_LIST, parameters, withoutIdentity)
         );
         this.articles = response.data;
-        this.pagination.total = response.total;
+        this.total = response.total;
       } catch (error) {
-        console.error('Error loading articles:', error);
+        this.error = describeError(error);
+      } finally {
+        this.loading = false;
       }
     },
 
-    async createArticle() {
-      if (!this.newArticle.title || !this.newArticle.content) return;
+    async runSearch() {
+      const query = this.search.trim();
 
-      try {
-        await this.jsonpad.createItem(JSONPAD_LIST, {
-          data: {
-            title: this.newArticle.title,
-            content: this.newArticle.content,
-            author: this.currentUser.name,
-            date: '$jsonpad-var:now',
-          },
-        });
-
-        this.newArticle.title = '';
-        this.newArticle.content = '';
-        this.closeCreateArticleModal();
-        this.loadArticles();
-      } catch (error) {
-        console.error('Error creating article:', error);
+      if (query.length < 3) {
+        this.error = 'Search for at least 3 characters.';
+        return;
       }
-    },
 
-    async editArticle() {
+      this.loading = true;
+      this.error = null;
+
       try {
-        await this.jsonpad.updateItemData(
-          JSONPAD_LIST,
-          this.editingArticle.id,
-          this.editingArticle.data
+        // Searches the indexes with searching turned on (title and summary),
+        // and returns the best matches first
+        const results = await retrying(() =>
+          jsonpad.searchList(JSONPAD_LIST, query, {
+            includeItems: true,
+            includeData: true,
+          })
         );
-        this.editingArticle = null;
-        this.closeEditArticleModal();
-        this.loadArticles();
+        this.searchResults = results.map(result => result.item);
       } catch (error) {
-        console.error('Error updating article:', error);
+        this.error = describeError(error);
+      } finally {
+        this.loading = false;
       }
     },
 
-    async deleteArticle(articleId) {
+    clearSearch() {
+      this.search = '';
+      this.searchResults = null;
+      this.error = null;
+    },
+
+    goToPage(page) {
+      this.page = page;
+      this.loadArticles();
+      window.scrollTo(0, 0);
+    },
+
+    // -------------------------------------------------------------------------
+    // Signing in and out
+    // -------------------------------------------------------------------------
+
+    showAuth(mode) {
+      this.authMode = mode;
+      this.authForm = { name: '', password: '' };
+      this.authError = null;
+      this.$refs.authDialog.showModal();
+    },
+
+    async submitAuth() {
+      const credentials = {
+        group: IDENTITY_GROUP,
+        name: this.authForm.name.trim(),
+        password: this.authForm.password,
+      };
+
+      this.authError = null;
+
       try {
-        await this.jsonpad.deleteItem(JSONPAD_LIST, articleId);
-        this.loadArticles();
+        if (this.authMode === 'register') {
+          await retrying(() => jsonpad.registerIdentity(credentials));
+        }
+
+        // loginIdentity() remembers the session, so from now on every request
+        // this client makes is made as this author
+        const [identity, token] = await retrying(() =>
+          jsonpad.loginIdentity(credentials)
+        );
+
+        saveSession(token);
+        this.me = identity;
+        this.$refs.authDialog.close();
       } catch (error) {
-        console.error('Error deleting article:', error);
+        this.authError = describeError(error);
       }
     },
 
-    showLoginModal() {
-      this.isRegistering = false;
-      this.authForm = { name: '', password: '' };
-      this.authError = null;
-      this.$refs.loginDialog.showModal();
+    async logout() {
+      try {
+        await retrying(() => jsonpad.logoutIdentity());
+      } catch (error) {
+        // The session had already ended, which is what we wanted anyway
+      }
+
+      saveSession(null);
+      this.me = null;
+      this.filters.mine = false;
     },
 
-    closeLoginModal() {
-      this.$refs.loginDialog.close();
+    // -------------------------------------------------------------------------
+    // Writing articles
+    // -------------------------------------------------------------------------
+
+    // Every item remembers the identity that created it
+    isMine(article) {
+      return this.me !== null && article.identity?.id === this.me.id;
     },
 
-    showRegisterModal() {
-      this.isRegistering = true;
-      this.authForm = { name: '', password: '' };
-      this.authError = null;
-      this.$refs.registerDialog.showModal();
+    startWriting(article = null) {
+      this.draft = article
+        ? {
+            id: article.id,
+            title: article.data.title,
+            summary: article.data.summary ?? '',
+            category: article.data.category ?? 'general',
+            content: article.data.content,
+          }
+        : emptyDraft();
+      this.draftError = null;
+      this.$refs.editorDialog.showModal();
     },
 
-    closeRegisterModal() {
-      this.$refs.registerDialog.close();
-    },
+    async saveDraft() {
+      const { id, title, summary, category, content } = this.draft;
 
-    startCreateArticle() {
-      this.newArticle = { title: '', content: '' };
-      this.$refs.createArticleDialog.showModal();
-    },
+      this.saving = true;
+      this.draftError = null;
 
-    closeCreateArticleModal() {
-      this.newArticle = { title: '', content: '' };
-      this.$refs.createArticleDialog.close();
-    },
+      try {
+        if (id === null) {
+          await retrying(() =>
+            jsonpad.createItem(JSONPAD_LIST, {
+              data: {
+                title,
+                summary,
+                category,
+                content,
+                author: this.me.name,
+                // Replaced with the time by JSONPad, so nobody can backdate
+                // an article. The write rules check this
+                publishedAt: '$jsonpad-var:now',
+              },
+            })
+          );
+        } else {
+          // Merged into the article, so author and publishedAt stay as they are
+          await retrying(() =>
+            jsonpad.updateItemData(JSONPAD_LIST, id, {
+              title,
+              summary,
+              category,
+              content,
+            })
+          );
+        }
 
-    startEditArticle(article) {
-      this.editingArticle = { ...article };
-      this.$refs.editArticleDialog.showModal();
-    },
-
-    closeEditArticleModal() {
-      this.editingArticle = null;
-      this.$refs.editArticleDialog.close();
-    },
-
-    nextPage() {
-      if (
-        this.pagination.page * this.pagination.limit <
-        this.pagination.total
-      ) {
-        this.pagination.page++;
-        this.loadArticles();
+        this.$refs.editorDialog.close();
+        await (this.searchResults ? this.runSearch() : this.loadArticles());
+      } catch (error) {
+        // The list's JSON schema and write rules explain what's wrong
+        this.draftError = describeError(error);
+      } finally {
+        this.saving = false;
       }
     },
 
-    previousPage() {
-      if (this.pagination.page > 1) {
-        this.pagination.page--;
-        this.loadArticles();
+    async deleteArticle(article) {
+      if (!confirm(`Delete "${article.data.title}"?`)) {
+        return;
       }
+
+      try {
+        await retrying(() => jsonpad.deleteItem(JSONPAD_LIST, article.id));
+        await (this.searchResults ? this.runSearch() : this.loadArticles());
+      } catch (error) {
+        this.error = describeError(error);
+      }
+    },
+
+    // -------------------------------------------------------------------------
+    // Displaying articles
+    // -------------------------------------------------------------------------
+
+    // Anyone can write an article, so its Markdown is cleaned before it's
+    // shown: a <script> in someone's article mustn't run in your browser
+    renderContent(article) {
+      return DOMPurify.sanitize(markdown.makeHtml(article.data.content ?? ''));
+    },
+
+    formatDate(article) {
+      return dayjs(article.data.publishedAt ?? article.createdAt).format(
+        'D MMMM YYYY'
+      );
     },
   },
 });

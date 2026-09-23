@@ -1,0 +1,71 @@
+{
+  "$schema": "https://jsonpad.io/schema/sync-v1.json",
+  "scope": "connect4",
+  "lists": {
+    "connect4-games": {
+      "name": "Connect 4 Games",
+      "description": "One item per game. Both players write to the same item, and the write rules referee it.",
+      "tags": ["connect4"],
+      "realtime": true,
+      "indexable": true,
+      "rulesFile": "rules/games.rules",
+      "rulesTestsFile": "rules/games.tests.json",
+      "schema": {
+        "type": "object",
+        "required": ["status", "participantIds", "board", "moves"],
+        "properties": {
+          "status": {
+            "enum": ["waiting", "started", "finished"]
+          },
+          "participantIds": {
+            "type": "array",
+            "maxItems": 2,
+            "items": { "type": "string" }
+          },
+          "currentPlayerId": {
+            "type": ["string", "null"]
+          },
+          "winnerId": {
+            "type": ["string", "null"]
+          },
+          "turnStartedAt": {
+            "type": "string"
+          },
+          "board": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "type": "array",
+              "minItems": 7,
+              "maxItems": 7,
+              "items": { "type": "integer", "minimum": 0, "maximum": 2 }
+            }
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["playerId", "column"],
+              "properties": {
+                "playerId": { "type": "string" },
+                "column": { "type": "integer", "minimum": 0, "maximum": 6 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "indexes": {
+        "status": {
+          "name": "Status",
+          "pointer": "/status",
+          "valueType": "string",
+          "filtering": true,
+          "sorting": true
+        }
+      }
+    }
+  }
+}

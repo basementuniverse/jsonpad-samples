@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect 4</title>
+  <link rel="stylesheet" href="default.css">
+  <script src="https://cdn.jsdelivr.net/npm/@basementuniverse/jsonpad-sdk@2.2.0/build/jsonpad-sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@basementuniverse/jsonpad-realtime-sdk@1.6.0/build/jsonpad-realtime-sdk.js"></script>
+</head>
+<body>
+  <main class="app">
+    <h1>Connect 4</h1>
+
+    <section class="panel hidden" id="setup">
+      <p>
+        This copy of the sample hasn't been set up yet. Follow the steps in
+        <code>README.md</code>, then paste your token into
+        <code>config.js</code>.
+      </p>
+    </section>
+
+    <section class="panel" id="sign-in">
+      <p>Pick a name to play as. Anyone using the same name is the same player.</p>
+      <form id="sign-in-form">
+        <input
+          type="text"
+          id="player-name"
+          placeholder="Your name"
+          autocomplete="off"
+          maxlength="32"
+          pattern="[A-Za-z0-9 ._@\-]+"
+          title="Letters, numbers, spaces and . _ @ -"
+          required
+        >
+        <button type="submit">Play</button>
+      </form>
+    </section>
+
+    <section class="panel hidden" id="lobby">
+      <p>Playing as <strong id="player-label"></strong>.</p>
+      <button type="button" id="new-game">Start a new game</button>
+      <h2>Your games</h2>
+      <ul class="games" id="my-games"></ul>
+      <h2>Games waiting for a player</h2>
+      <ul class="games" id="open-games"></ul>
+    </section>
+
+    <section class="panel hidden" id="game">
+      <p id="status"></p>
+      <div class="board" id="board"></div>
+      <button type="button" class="hidden" id="cancel">Cancel this game</button>
+      <button type="button" id="leave">Back to the lobby</button>
+    </section>
+
+    <p class="error hidden" id="error"></p>
+    <p class="connection" id="connection"></p>
+  </main>
+  <footer>
+    <p>
+      A sample app for <a href="https://jsonpad.io">JSONPad</a>. The rules of
+      the game are enforced by
+      <a href="https://jsonpad.io/docs/write-rules">write rules</a>, not by this
+      page &mdash; see <a href="rules/games.rules">rules/games.rules</a>.
+    </p>
+  </footer>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

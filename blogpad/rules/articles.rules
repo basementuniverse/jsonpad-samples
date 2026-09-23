@@ -1,0 +1,25 @@
+// BlogPad articles.
+//
+// The token's permissions already decide who can do what. Anyone can read an
+// article, and only a signed-in author can write one, or change or delete one
+// of their own: a request made with an identity can only change the items that
+// identity created.
+//
+// So these rules don't authorise anything, and `jsonpad rules check` says so:
+// "create is validated but not authorised". They check what gets written, which
+// a JSON schema can't do: a schema sees one version of an article, and knows
+// nothing about who is writing it, or when, or what it said before.
+
+require create, update "you're the author":
+  identity != null && new.author == identity.name
+  else "an article's author must be the person writing it";
+
+// Clients write the literal "$jsonpad-var:now", which JSONPad replaces with
+// its own clock before these rules run
+require create "published now":
+  new.publishedAt == now
+  else "write \"$jsonpad-var:now\" to /publishedAt";
+
+require update "the publication date stays put":
+  unchanged("/publishedAt")
+  else "an article's publication date can't be changed";

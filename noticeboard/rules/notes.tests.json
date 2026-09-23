@@ -1,0 +1,83 @@
+{
+  "$schema": "https://jsonpad.io/schema/rules-tests-v1.json",
+  "defaults": {
+    "now": "2026-01-01T12:00:00Z"
+  },
+  "tests": [
+    {
+      "name": "anyone can add a note",
+      "action": "create",
+      "expect": "allow",
+      "new": {
+        "colour": "yellow",
+        "x": 120,
+        "y": 80,
+        "content": ""
+      }
+    },
+    {
+      "name": "anyone can edit a note",
+      "action": "update",
+      "expect": "allow",
+      "old": {
+        "colour": "yellow",
+        "x": 120,
+        "y": 80,
+        "content": "Band practice at 7"
+      },
+      "new": {
+        "colour": "yellow",
+        "x": 120,
+        "y": 80,
+        "content": "Band practice at 8"
+      }
+    },
+    {
+      "name": "anyone can move a note",
+      "action": "update",
+      "expect": "allow",
+      "old": {
+        "colour": "yellow",
+        "x": 120,
+        "y": 80,
+        "content": "Band practice at 7"
+      },
+      "new": {
+        "colour": "yellow",
+        "x": 400,
+        "y": 300,
+        "content": "Band practice at 7"
+      }
+    },
+    {
+      "name": "a note can't be recoloured",
+      "action": "update",
+      "expect": {
+        "fail": "a note's colour can't be changed"
+      },
+      "old": {
+        "colour": "yellow",
+        "x": 120,
+        "y": 80,
+        "content": "Band practice at 7"
+      },
+      "new": {
+        "colour": "red",
+        "x": 120,
+        "y": 80,
+        "content": "Band practice at 7"
+      }
+    },
+    {
+      "name": "anyone can take a note down",
+      "action": "delete",
+      "expect": "allow",
+      "old": {
+        "colour": "yellow",
+        "x": 120,
+        "y": 80,
+        "content": "Band practice at 7"
+      }
+    }
+  ]
+}

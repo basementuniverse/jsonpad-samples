@@ -3,217 +3,192 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>blog.pad</title>
+  <title>BlogPad</title>
   <link rel="stylesheet" href="default.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@basementuniverse/jsonpad-sdk@1.6.1/build/jsonpad-sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.43/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@basementuniverse/jsonpad-sdk@2.2.0/build/jsonpad-sdk.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.4.16/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.23/dayjs.min.js"></script>
 </head>
 <body>
-  <div id="app" class="container">
+  <div id="app" class="container" v-cloak>
     <h1 class="page-title">BlogPad</h1>
 
-    <!-- Auth Status -->
-    <div v-if="!currentUser" class="user-container user-container-logged-out">
-      <button
-        @click="showLoginModal"
-        class="login-button"
-      >
-        <i class="fa fa-user"></i>
-        Login
-      </button>
-      <button
-        @click="showRegisterModal"
-        class="register-button"
-      >
-        <i class="fa fa-user-plus"></i>
-        Register
-      </button>
-    </div>
-    <div v-else class="user-container user-container-logged-in">
-      <p>
-        Welcome, {{ currentUser.name }}!
-        <button
-          @click="handleLogout"
-          class="logout-button"
-        >
-          <i class="fa fa-sign-out"></i>
-          Logout
+    <p v-if="!configured" class="setup">
+      This copy of the sample hasn't been set up yet. Follow the steps in
+      <code>README.md</code>, then paste your token into <code>config.js</code>.
+    </p>
+
+    <template v-else>
+      <!-- Signing in -->
+      <div class="user-container">
+        <template v-if="me">
+          <span class="welcome">Signed in as <strong>{{ me.name }}</strong></span>
+          <button @click="startWriting()" class="primary">
+            <i class="fa fa-plus"></i>Write an article
+          </button>
+          <button @click="logout">
+            <i class="fa fa-sign-out"></i>Sign out
+          </button>
+        </template>
+        <template v-else>
+          <button @click="showAuth('login')">
+            <i class="fa fa-sign-in"></i>Sign in
+          </button>
+          <button @click="showAuth('register')" class="primary">
+            <i class="fa fa-user-plus"></i>Register to write
+          </button>
+        </template>
+      </div>
+
+      <!-- Searching, filtering and sorting -->
+      <form class="search" @submit.prevent="runSearch">
+        <input v-model="search" type="search" placeholder="Search titles and summaries">
+        <button type="submit"><i class="fa fa-search"></i>Search</button>
+        <button v-if="searchResults" type="button" @click="clearSearch">
+          <i class="fa fa-times"></i>Clear
         </button>
+      </form>
+
+      <div v-if="!searchResults" class="filters">
+        <label>
+          Category
+          <select v-model="filters.category">
+            <option value="">All</option>
+            <option v-for="(label, value) in categories" :value="value">{{ label }}</option>
+          </select>
+        </label>
+        <label>
+          Published
+          <select v-model="filters.recent">
+            <option value="">Any time</option>
+            <option value="7">In the last week</option>
+            <option value="30">In the last month</option>
+          </select>
+        </label>
+        <label>
+          Sort by
+          <select v-model="sort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="title">Title</option>
+          </select>
+        </label>
+        <label v-if="me" class="checkbox">
+          <input v-model="filters.mine" type="checkbox">
+          Only mine
+        </label>
+      </div>
+
+      <p v-if="searchResults" class="results-heading">
+        {{ searchResults.length === 0 ? 'Nothing matched' : 'Best matches' }}
+        for "{{ search }}"
       </p>
-      <button @click="startCreateArticle" class="create-article-button">
-        <i class="fa fa-plus"></i>
-        Create Article
-      </button>
-    </div>
 
-    <!-- Articles List -->
-    <div v-for="article in articles" :key="article.id" class="article">
-      <h3 class="article-title">{{ article.data.title }}</h3>
-      <p class="article-metadata">{{ dayjs(article.createdAt).format('D MMMM YYYY HH:mm') }} by {{ article.data.author }}</p>
-      <div class="article-content" v-html="showdownConverter.makeHtml(article.data.content)"></div>
-      <div
-        v-if="currentUser && currentUser.name === article.data.author"
-        class="article-controls"
-      >
-        <button
-          @click="deleteArticle(article.id)"
-          class="delete-article-button"
-        >
-          <i class="fa fa-trash"></i>
-          Delete
+      <p v-if="error" class="error">{{ error }}</p>
+
+      <!-- Articles -->
+      <article v-for="article in shownArticles" :key="article.id" class="article">
+        <h2 class="article-title">{{ article.data.title }}</h2>
+        <p class="article-metadata">
+          {{ formatDate(article) }} by {{ article.data.author }}
+          <span v-if="article.data.category" class="category">
+            {{ categories[article.data.category] }}
+          </span>
+        </p>
+        <p v-if="article.data.summary" class="article-summary">{{ article.data.summary }}</p>
+        <div class="article-content" v-html="renderContent(article)"></div>
+        <div v-if="isMine(article)" class="article-controls">
+          <button @click="startWriting(article)">
+            <i class="fa fa-pencil"></i>Edit
+          </button>
+          <button @click="deleteArticle(article)" class="danger">
+            <i class="fa fa-trash"></i>Delete
+          </button>
+        </div>
+      </article>
+
+      <p v-if="!loading && !searchResults && articles.length === 0" class="empty">
+        <template v-if="filtered">No articles match those filters.</template>
+        <template v-else>
+          No articles yet.
+          <template v-if="!me">Register and write the first one!</template>
+        </template>
+      </p>
+
+      <div v-if="!searchResults && pages > 1" class="pagination">
+        <button @click="goToPage(page - 1)" :disabled="page === 1">
+          <i class="fa fa-chevron-left"></i>Previous
         </button>
-        <button
-          @click="startEditArticle(article)"
-          class="edit-article-button"
-        >
-          <i class="fa fa-pencil"></i>
-          Edit
+        <span>Page {{ page }} of {{ pages }}</span>
+        <button @click="goToPage(page + 1)" :disabled="page === pages">
+          Next<i class="fa fa-chevron-right after"></i>
         </button>
       </div>
-    </div>
+    </template>
 
-    <!-- Pagination Controls -->
-    <div class="pagination">
-      <button
-        @click="previousPage"
-        :disabled="pagination.page === 1"
-        class="previous-page-button"
-      >
-        <i class="fa fa-chevron-left"></i>
-        Previous
-      </button>
-      <button
-        @click="nextPage"
-        :disabled="pagination.page * pagination.limit >= pagination.total"
-        class="next-page-button"
-      >
-        <i class="fa fa-chevron-right"></i>
-        Next
-      </button>
-    </div>
-
-    <!-- Login Modal -->
-    <dialog ref="loginDialog" class="login-dialog">
-      <h2 class="login-dialog-header">Login</h2>
-      <div class="login-dialog-inner">
+    <!-- Sign in or register -->
+    <dialog ref="authDialog">
+      <form @submit.prevent="submitAuth">
+        <h2>{{ authMode === 'register' ? 'Register' : 'Sign in' }}</h2>
         <input
           v-model="authForm.name"
           placeholder="Username"
+          autocomplete="username"
+          pattern="[A-Za-z0-9 ._@\-]+"
+          title="Letters, numbers, spaces and . _ @ -"
+          required
         >
         <input
           v-model="authForm.password"
           type="password"
           placeholder="Password"
+          :autocomplete="authMode === 'register' ? 'new-password' : 'current-password'"
+          :minlength="authMode === 'register' ? 8 : null"
+          required
         >
-        <button
-          @click="handleAuth"
-          class="login-button"
-        >
-          <i class="fa fa-sign-in"></i>
-          Login
-        </button>
-        <button
-          @click="closeLoginModal"
-          class="cancel-button"
-        >
-          <i class="fa fa-times"></i>
-          Cancel
-        </button>
-      </div>
-      <p v-if="authError" class="error">{{ authError }}</p>
+        <p v-if="authMode === 'register'" class="hint">At least 8 characters.</p>
+        <p v-if="authError" class="error">{{ authError }}</p>
+        <div class="dialog-buttons">
+          <button type="submit" class="primary">
+            {{ authMode === 'register' ? 'Register' : 'Sign in' }}
+          </button>
+          <button type="button" @click="$refs.authDialog.close()">Cancel</button>
+        </div>
+      </form>
     </dialog>
 
-    <!-- Register Modal -->
-    <dialog ref="registerDialog" class="register-dialog">
-      <h2 class="register-dialog-header">Register</h2>
-      <div class="register-dialog-inner">
-        <input
-          v-model="authForm.name"
-          placeholder="Username"
-        >
-        <input
-          v-model="authForm.password"
-          type="password"
-          placeholder="Password"
-        >
-        <button
-          @click="handleAuth"
-          class="register-button"
-        >
-          <i class="fa fa-user-plus"></i>
-          Register
-        </button>
-        <button
-          @click="closeRegisterModal"
-          class="cancel-button"
-        >
-          <i class="fa fa-times"></i>
-          Cancel
-        </button>
-      </div>
-      <p v-if="authError" class="error">{{ authError }}</p>
-    </dialog>
-
-    <!-- Create article modal -->
-    <dialog ref="createArticleDialog" class="create-article-dialog">
-      <h3 class="create-article-dialog-header">Create Article</h3>
-      <input
-        v-model="newArticle.title"
-        placeholder="Title"
-      >
-      <textarea
-        v-model="newArticle.content"
-        placeholder="Content"
-      ></textarea>
-      <button
-        @click="createArticle"
-        class="create-article-button"
-      >
-        <i class="fa fa-plus"></i>
-        Create
-      </button>
-      <button
-        @click="closeCreateArticleModal"
-        class="cancel-button"
-      >
-        <i class="fa fa-times"></i>
-        Cancel
-      </button>
-    </dialog>
-
-    <!-- Edit Modal -->
-    <dialog ref="editArticleDialog" class="edit-article-dialog">
-      <h3 class="edit-article-dialog-header">Edit Article</h3>
-      <input
-        v-model="editingArticle.data.title"
-        placeholder="Title"
-        v-if="editingArticle"
-      >
-      <textarea
-        v-model="editingArticle.data.content"
-        placeholder="Content"
-        v-if="editingArticle"
-      ></textarea>
-      <button
-        @click="editArticle"
-        v-if="editingArticle"
-        class="edit-article-button"
-      >
-        <i class="fa fa-pencil"></i>
-        Save
-      </button>
-      <button
-        @click="closeEditArticleModal"
-        class="cancel-button"
-      >
-        <i class="fa fa-times"></i>
-        Cancel
-      </button>
+    <!-- Write or edit an article -->
+    <dialog ref="editorDialog" class="editor">
+      <form @submit.prevent="saveDraft">
+        <h2>{{ draft.id ? 'Edit your article' : 'Write an article' }}</h2>
+        <input v-model="draft.title" placeholder="Title" required maxlength="120">
+        <input v-model="draft.summary" placeholder="A one-line summary" required maxlength="280">
+        <select v-model="draft.category">
+          <option v-for="(label, value) in categories" :value="value">{{ label }}</option>
+        </select>
+        <textarea v-model="draft.content" placeholder="Write in Markdown" required></textarea>
+        <p v-if="draftError" class="error">{{ draftError }}</p>
+        <div class="dialog-buttons">
+          <button type="submit" class="primary" :disabled="saving">
+            {{ draft.id ? 'Save changes' : 'Publish' }}
+          </button>
+          <button type="button" @click="$refs.editorDialog.close()">Cancel</button>
+        </div>
+      </form>
     </dialog>
   </div>
+
+  <footer>
+    A sample app for <a href="https://jsonpad.io">JSONPad</a>. See
+    <a href="jsonpad-schema.json">jsonpad-schema.json</a> for the list, its
+    schema and indexes, and <a href="rules/articles.rules">rules/articles.rules</a>
+    for its write rules.
+  </footer>
+
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

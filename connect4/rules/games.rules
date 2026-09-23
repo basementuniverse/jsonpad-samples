@@ -1,0 +1,91 @@
+// Connect 4, refereed by JSONPad.
+//
+// Both players write to the same game item, so the rules have to be the
+// referee: they decide whose turn it is, that the history can only be added
+// to, and that the board always matches the moves that were recorded.
+
+// Players write items they don't own: the rules below decide who may
+shared update;
+
+let isPlayer = identity != null && identity.id in old.participantIds;
+
+// How many pieces are on a board
+function pieces(board) = sum(map(board, row => count(row, cell => cell != 0)));
+
+// -----------------------------------------------------------------------------
+// Who may write
+// -----------------------------------------------------------------------------
+
+allow create "start a game": identity != null
+  && new.status == "waiting"
+  && new.participantIds == [identity.id]
+  && length(new.moves) == 0
+  && new.winnerId == null;
+
+allow update "join a game": identity != null
+  && old.status == "waiting"
+  && identity.id not in old.participantIds
+  && new.participantIds == old.participantIds + [identity.id]
+  && new.status == "started"
+  && new.currentPlayerId == old.participantIds[0]
+  && onlyChanged(
+    "/participantIds", "/status", "/currentPlayerId", "/turnStartedAt"
+  );
+
+allow update "take your turn": isPlayer
+  && old.status == "started"
+  && identity.id == old.currentPlayerId
+  && onlyChanged(
+    "/board", "/moves", "/currentPlayerId", "/turnStartedAt",
+    "/status", "/winnerId"
+  );
+
+allow delete "abandon a game nobody joined": isPlayer
+  && old.status == "waiting";
+
+// Nobody is scheduling anything: either player may claim the turn once the
+// other one has run out of time, and only then
+allow update "claim a slow turn": isPlayer
+  && old.status == "started"
+  && now > old.turnStartedAt + 2m
+  && new.currentPlayerId != old.currentPlayerId
+  && onlyChanged("/currentPlayerId", "/turnStartedAt");
+
+// -----------------------------------------------------------------------------
+// What they may write
+// -----------------------------------------------------------------------------
+
+require update "history is append-only":
+  startsWith(new.moves, old.moves)
+  && length(new.moves) <= length(old.moves) + 1
+  else "moves can only be added, one at a time";
+
+require update "a move is your own":
+  length(new.moves) == length(old.moves)
+  || last(new.moves).playerId == identity.id
+  else "you can only record your own move";
+
+require update "a move is in a real column":
+  length(new.moves) == length(old.moves)
+  || (last(new.moves).column >= 0 && last(new.moves).column <= 6)
+  else "a move must be in a column from 0 to 6";
+
+// The board can't gain a piece that isn't in the history, and the history
+// can't gain a move that isn't on the board
+require create, update "the board matches the history":
+  pieces(new.board) == length(new.moves)
+  else "the board must hold exactly one piece per recorded move";
+
+require update "players are fixed once the game starts":
+  old.status == "waiting" || unchanged("/participantIds")
+  else "players can't join a game that has started";
+
+require create, update "the winner is one of the players":
+  new.winnerId == null || new.winnerId in new.participantIds
+  else "the winner must be one of this game's players";
+
+// Clients write the literal "$jsonpad-var:now", which JSONPad replaces with
+// the server's clock before these rules run
+require update "the clock is ours, not yours":
+  unchanged("/turnStartedAt") || new.turnStartedAt == now
+  else "write \"$jsonpad-var:now\" to /turnStartedAt";

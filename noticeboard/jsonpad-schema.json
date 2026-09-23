@@ -1,0 +1,39 @@
+{
+  "$schema": "https://jsonpad.io/schema/sync-v1.json",
+  "scope": "noticeboard",
+  "lists": {
+    "notice-board-notices": {
+      "name": "Notice Board Notices",
+      "description": "One item per note on the board. Every change is sent to everyone watching, as it happens.",
+      "tags": ["noticeboard"],
+      "realtime": true,
+      "indexable": true,
+      "rulesFile": "rules/notes.rules",
+      "rulesTestsFile": "rules/notes.tests.json",
+      "schema": {
+        "type": "object",
+        "required": ["colour", "x", "y", "content"],
+        "properties": {
+          "colour": {
+            "enum": ["red", "green", "blue", "yellow"]
+          },
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5000
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5000
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

@@ -1,0 +1,205 @@
+:root {
+  --bg: #222831;
+  --panel: #31363f;
+  --fg: #eeeeee;
+  --muted: #89aaad;
+  --mine: #f0ad4e;
+  --theirs: #45a0bc;
+  --danger: #d9534f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Open Sans", system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.app {
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+h1 {
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+input[type="text"] {
+  padding: 0.5rem 0.7rem;
+  border: 2px solid var(--bg);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+button {
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 4px;
+  background: var(--muted);
+  color: var(--bg);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.15);
+}
+
+button:disabled {
+  cursor: default;
+}
+
+ul.games {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.games li {
+  padding: 0.2rem 0;
+}
+
+ul.games .empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.hands {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.hand {
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  background: var(--bg);
+  border-left: 4px solid var(--theirs);
+}
+
+.hand.mine {
+  border-left-color: var(--mine);
+}
+
+.hand.current {
+  box-shadow: 0 0 0 2px var(--muted);
+}
+
+.hand-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.hand-state {
+  color: var(--muted);
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 3.4rem;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 3.4rem;
+  border-radius: 4px;
+  background: var(--fg);
+  color: #222;
+  font-weight: 600;
+}
+
+.card.red {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.actions.hidden {
+  display: none;
+}
+
+code {
+  font-size: 0.95em;
+  color: var(--mine);
+}
+
+.connection {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.connection:empty {
+  display: none;
+}
+
+.connection::before {
+  content: "";
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.connection[data-state="live"]::before {
+  background: #5cb85c;
+}
+
+.connection[data-state="limited"]::before {
+  background: var(--mine);
+}
+
+.error {
+  color: var(--danger);
+}
+
+footer {
+  max-width: 34rem;
+  margin: 2rem auto 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+footer a {
+  color: var(--fg);
+}

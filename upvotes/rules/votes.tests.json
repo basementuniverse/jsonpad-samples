@@ -1,0 +1,95 @@
+{
+  "items": {
+    "upvotes-posts": {
+      "p1": {
+        "data": {
+          "title": "Hello",
+          "voteCount": 0
+        }
+      }
+    }
+  },
+  "tests": [
+    {
+      "name": "a player can vote for a post",
+      "action": "create",
+      "identity": {
+        "id": "ann-id"
+      },
+      "new": {
+        "postId": "p1",
+        "key": "ann-id:p1"
+      },
+      "expect": "allow"
+    },
+    {
+      "name": "nobody can vote without signing in",
+      "action": "create",
+      "new": {
+        "postId": "p1",
+        "key": "ann-id:p1"
+      },
+      "expect": "deny"
+    },
+    {
+      "name": "a vote's key has to be yours",
+      "action": "create",
+      "identity": {
+        "id": "bob-id"
+      },
+      "new": {
+        "postId": "p1",
+        "key": "ann-id:p1"
+      },
+      "expect": {
+        "fail": "key must be your identity id"
+      }
+    },
+    {
+      "name": "only for a post that exists",
+      "action": "create",
+      "identity": {
+        "id": "ann-id"
+      },
+      "new": {
+        "postId": "p2",
+        "key": "ann-id:p2"
+      },
+      "expect": {
+        "fail": "postId must be the id of a post"
+      }
+    },
+    {
+      "name": "a player can take their vote back",
+      "action": "delete",
+      "identity": {
+        "id": "ann-id"
+      },
+      "oldItem": {
+        "id": "v1",
+        "identityId": "ann-id"
+      },
+      "old": {
+        "postId": "p1",
+        "key": "ann-id:p1"
+      },
+      "expect": "allow"
+    },
+    {
+      "name": "but not somebody else's",
+      "action": "delete",
+      "identity": {
+        "id": "bob-id"
+      },
+      "oldItem": {
+        "id": "v1",
+        "identityId": "ann-id"
+      },
+      "old": {
+        "postId": "p1",
+        "key": "ann-id:p1"
+      },
+      "expect": "deny"
+    }
+  ]
+}

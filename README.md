@@ -14,6 +14,8 @@ free plan is enough for all of them.
 | [BlogPad](blogpad) | [Live demo](https://basementuniverse.github.io/jsonpad-samples/blogpad/) | **Start here.** The basics: lists and items, identities (sign-up and sign-in), JSON schema validation, and sorting, filtering and searching with indexes |
 | [Notice Board](noticeboard) | [Live demo](https://basementuniverse.github.io/jsonpad-samples/noticeboard/) | **Realtime collaboration.** Everyone shares one board, and sees every change as it happens |
 | [Connect 4](connect4) | [Live demo](https://basementuniverse.github.io/jsonpad-samples/connect4/) | **Write rules.** Two players write to the same item, and JSONPad's write rules referee the game. Open the console and try to cheat |
+| [Twenty-one](cards) | [Live demo](https://basementuniverse.github.io/jsonpad-samples/cards/) | **Endpoint flows.** A card game whose every move is made by a flow, dealt from a deck the players can't see. The page can't write anything at all |
+| [Upvotes](upvotes) | [Live demo](https://basementuniverse.github.io/jsonpad-samples/upvotes/) | **Event flows.** Each vote is an item, and a flow keeps every post's vote count up to date. Nobody can give themselves a thousand votes |
 
 ## What they have in common
 
@@ -22,9 +24,9 @@ free plan is enough for all of them.
 - **One token, in the page.** Each app talks to JSONPad with a token that has
   only the permissions it needs. Anyone can read it, and that's fine: it can't
   do anything its permissions and the list's rules don't allow.
-- **Schema sync.** Each sample's lists, JSON schemas, indexes and write rules
-  are described in its `jsonpad-schema.json`, and set up with one command:
-  `jsonpad sync-schema`.
+- **Schema sync.** Each sample's lists, JSON schemas, indexes, write rules and
+  flows are described in its `jsonpad-schema.json`, and set up with one
+  command: `jsonpad sync-schema`.
 - **The official SDKs**, loaded from a CDN:
   [`@basementuniverse/jsonpad-sdk`](https://www.npmjs.com/package/@basementuniverse/jsonpad-sdk),
   and

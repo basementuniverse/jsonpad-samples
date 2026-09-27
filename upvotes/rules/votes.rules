@@ -1,0 +1,17 @@
+// One vote per person per post. Each vote has a key made of who cast it and
+// which post it's for, and the key is an alias, which JSONPad keeps unique.
+// So a second vote for the same post is refused, and the rules make sure the
+// key really is yours
+allow create "signed in": identity != null;
+
+require create "your key": new.key == identity.id + ":" + new.postId
+  else "key must be your identity id and the post id, joined with a colon";
+
+require create "a real post": exists("upvotes-posts", new.postId)
+  else "postId must be the id of a post";
+
+// Taking a vote back deletes it, and only its owner can. A vote can't be
+// changed into a vote for something else
+allow delete "your own vote": identity != null
+  && oldItem.identityId == identity.id;
+allow update "nobody": false;

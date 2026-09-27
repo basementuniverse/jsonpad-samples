@@ -1,0 +1,68 @@
+{
+  "items": {
+    "upvotes-posts": {
+      "p1": {
+        "data": {
+          "title": "Hello",
+          "voteCount": 2
+        }
+      }
+    }
+  },
+  "tests": [
+    {
+      "name": "a vote adds one",
+      "event": {
+        "type": "item.created",
+        "list": "upvotes-votes",
+        "item": {
+          "postId": "p1",
+          "key": "ann-id:p1"
+        }
+      },
+      "expect": {
+        "items": {
+          "upvotes-posts": {
+            "p1": {
+              "voteCount": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "taking a vote back takes one away",
+      "event": {
+        "type": "item.deleted",
+        "list": "upvotes-votes",
+        "previous": {
+          "postId": "p1",
+          "key": "ann-id:p1"
+        }
+      },
+      "expect": {
+        "items": {
+          "upvotes-posts": {
+            "p1": {
+              "voteCount": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "a vote for a post that's gone does nothing",
+      "event": {
+        "type": "item.created",
+        "list": "upvotes-votes",
+        "item": {
+          "postId": "gone",
+          "key": "ann-id:gone"
+        }
+      },
+      "expect": {
+        "writes": []
+      }
+    }
+  ]
+}

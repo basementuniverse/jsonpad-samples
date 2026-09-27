@@ -1,0 +1,646 @@
+{
+  "identities": {
+    "ann": {
+      "id": "ann-id",
+      "name": "ann"
+    },
+    "bob": {
+      "id": "bob-id",
+      "name": "bob"
+    },
+    "cat": {
+      "id": "cat-id",
+      "name": "cat"
+    }
+  },
+  "items": {
+    "cards-games": {
+      "g1": {
+        "data": {
+          "status": "waiting",
+          "players": [
+            {
+              "id": "ann-id",
+              "name": "ann",
+              "cards": [],
+              "total": 0,
+              "state": "playing"
+            }
+          ],
+          "turn": 0,
+          "deckId": "d1",
+          "winnerId": null
+        }
+      },
+      "g2": {
+        "data": {
+          "status": "playing",
+          "players": [
+            {
+              "id": "ann-id",
+              "name": "ann",
+              "cards": [],
+              "total": 0,
+              "state": "playing"
+            },
+            {
+              "id": "bob-id",
+              "name": "bob",
+              "cards": [],
+              "total": 0,
+              "state": "playing"
+            }
+          ],
+          "turn": 0,
+          "deckId": "d1",
+          "winnerId": null
+        }
+      },
+      "draw-g1": {
+        "data": {
+          "status": "playing",
+          "players": [
+            {
+              "id": "ann-id",
+              "name": "ann",
+              "cards": [
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                },
+                {
+                  "rank": "5",
+                  "suit": "H",
+                  "value": 5
+                }
+              ],
+              "total": 15,
+              "state": "playing"
+            },
+            {
+              "id": "bob-id",
+              "name": "bob",
+              "cards": [],
+              "total": 0,
+              "state": "playing"
+            }
+          ],
+          "turn": 0,
+          "deckId": "d1",
+          "winnerId": null
+        }
+      },
+      "draw-g2": {
+        "data": {
+          "status": "playing",
+          "players": [
+            {
+              "id": "ann-id",
+              "name": "ann",
+              "cards": [
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                },
+                {
+                  "rank": "5",
+                  "suit": "H",
+                  "value": 5
+                }
+              ],
+              "total": 15,
+              "state": "stood"
+            },
+            {
+              "id": "bob-id",
+              "name": "bob",
+              "cards": [
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                },
+                {
+                  "rank": "5",
+                  "suit": "H",
+                  "value": 5
+                }
+              ],
+              "total": 15,
+              "state": "playing"
+            }
+          ],
+          "turn": 1,
+          "deckId": "d1",
+          "winnerId": null
+        }
+      },
+      "stand-g1": {
+        "data": {
+          "status": "playing",
+          "players": [
+            {
+              "id": "ann-id",
+              "name": "ann",
+              "cards": [
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                },
+                {
+                  "rank": "5",
+                  "suit": "H",
+                  "value": 5
+                }
+              ],
+              "total": 15,
+              "state": "playing"
+            },
+            {
+              "id": "bob-id",
+              "name": "bob",
+              "cards": [],
+              "total": 0,
+              "state": "playing"
+            }
+          ],
+          "turn": 0,
+          "deckId": "d1",
+          "winnerId": null
+        }
+      },
+      "stand-g2": {
+        "data": {
+          "status": "playing",
+          "players": [
+            {
+              "id": "ann-id",
+              "name": "ann",
+              "cards": [
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                },
+                {
+                  "rank": "5",
+                  "suit": "H",
+                  "value": 5
+                }
+              ],
+              "total": 15,
+              "state": "stood"
+            },
+            {
+              "id": "bob-id",
+              "name": "bob",
+              "cards": [
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                },
+                {
+                  "rank": "9",
+                  "suit": "H",
+                  "value": 9
+                }
+              ],
+              "total": 19,
+              "state": "playing"
+            }
+          ],
+          "turn": 1,
+          "deckId": "d1",
+          "winnerId": null
+        }
+      },
+      "g3": {
+        "data": {
+          "status": "playing",
+          "players": [
+            {
+              "id": "ann-id",
+              "name": "ann",
+              "cards": [
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                },
+                {
+                  "rank": "9",
+                  "suit": "H",
+                  "value": 9
+                }
+              ],
+              "total": 19,
+              "state": "stood"
+            },
+            {
+              "id": "bob-id",
+              "name": "bob",
+              "cards": [
+                {
+                  "rank": "9",
+                  "suit": "H",
+                  "value": 9
+                },
+                {
+                  "rank": "K",
+                  "suit": "S",
+                  "value": 10
+                }
+              ],
+              "total": 19,
+              "state": "playing"
+            }
+          ],
+          "turn": 1,
+          "deckId": "d1",
+          "winnerId": null
+        }
+      }
+    },
+    "cards-decks": {
+      "d1": {
+        "data": {
+          "cards": [
+            {
+              "rank": "9",
+              "suit": "H",
+              "value": 9
+            },
+            {
+              "rank": "A",
+              "suit": "D",
+              "value": 11
+            },
+            {
+              "rank": "6",
+              "suit": "C",
+              "value": 6
+            }
+          ]
+        }
+      }
+    }
+  },
+  "tests": [
+    {
+      "name": "starts a game with a new deck, waiting for a second player",
+      "identity": "ann",
+      "input": {
+        "action": "new-game",
+        "name": "ann"
+      },
+      "expect": {
+        "status": 201,
+        "writes": [
+          {
+            "op": "create",
+            "list": "cards-decks"
+          },
+          {
+            "op": "create",
+            "list": "cards-games",
+            "data": {
+              "status": "waiting",
+              "turn": 0,
+              "players": [
+                {
+                  "id": "ann-id",
+                  "name": "ann",
+                  "cards": [],
+                  "total": 0,
+                  "state": "playing"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "needs someone signed in",
+      "identity": null,
+      "input": {
+        "action": "new-game",
+        "name": "ann"
+      },
+      "expect": {
+        "status": 401,
+        "error": "sign in first"
+      }
+    },
+    {
+      "name": "joins a waiting game, which starts",
+      "identity": "bob",
+      "input": {
+        "action": "join",
+        "gameId": "g1",
+        "name": "bob"
+      },
+      "expect": {
+        "status": 200,
+        "items": {
+          "cards-games": {
+            "g1": {
+              "status": "playing",
+              "players": [
+                {
+                  "id": "ann-id",
+                  "name": "ann",
+                  "cards": [],
+                  "total": 0,
+                  "state": "playing"
+                },
+                {
+                  "id": "bob-id",
+                  "name": "bob",
+                  "cards": [],
+                  "total": 0,
+                  "state": "playing"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "can't join a game that has started",
+      "identity": "cat",
+      "input": {
+        "action": "join",
+        "gameId": "g2",
+        "name": "cat"
+      },
+      "expect": {
+        "status": 409,
+        "error": "already started"
+      }
+    },
+    {
+      "name": "can't join your own game",
+      "identity": "ann",
+      "input": {
+        "action": "join",
+        "gameId": "g1",
+        "name": "ann"
+      },
+      "expect": {
+        "status": 409,
+        "error": "already in that game"
+      }
+    },
+    {
+      "name": "can't join a game that doesn't exist",
+      "identity": "bob",
+      "input": {
+        "action": "join",
+        "gameId": "nope",
+        "name": "bob"
+      },
+      "expect": {
+        "status": 404,
+        "error": "there's no item"
+      }
+    },
+    {
+      "name": "deals the top card, and going over 21 ends the turn",
+      "identity": "ann",
+      "input": {
+        "action": "draw",
+        "gameId": "draw-g1"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "card": {
+            "rank": "9",
+            "suit": "H",
+            "value": 9
+          },
+          "total": 24,
+          "bust": true
+        },
+        "items": {
+          "cards-games": {
+            "draw-g1": {
+              "turn": 1,
+              "status": "playing",
+              "players": [
+                {
+                  "id": "ann-id",
+                  "name": "ann",
+                  "cards": [
+                    {
+                      "rank": "K",
+                      "suit": "S",
+                      "value": 10
+                    },
+                    {
+                      "rank": "5",
+                      "suit": "H",
+                      "value": 5
+                    },
+                    {
+                      "rank": "9",
+                      "suit": "H",
+                      "value": 9
+                    }
+                  ],
+                  "total": 24,
+                  "state": "bust"
+                },
+                {
+                  "id": "bob-id",
+                  "name": "bob",
+                  "cards": [],
+                  "total": 0,
+                  "state": "playing"
+                }
+              ]
+            }
+          },
+          "cards-decks": {
+            "d1": {
+              "cards": [
+                {
+                  "rank": "A",
+                  "suit": "D",
+                  "value": 11
+                },
+                {
+                  "rank": "6",
+                  "suit": "C",
+                  "value": 6
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "only the player whose turn it is can draw",
+      "identity": "bob",
+      "input": {
+        "action": "draw",
+        "gameId": "draw-g1"
+      },
+      "expect": {
+        "status": 403,
+        "error": "not your turn",
+        "writes": []
+      }
+    },
+    {
+      "name": "the last player going bust ends the game",
+      "identity": "bob",
+      "input": {
+        "action": "draw",
+        "gameId": "draw-g2"
+      },
+      "expect": {
+        "status": 200,
+        "items": {
+          "cards-games": {
+            "draw-g2": {
+              "status": "finished",
+              "winnerId": "ann-id"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "an ace counts 1 when 11 would go bust",
+      "identity": "ann",
+      "input": {
+        "action": "draw",
+        "gameId": "draw-g1"
+      },
+      "items": {
+        "cards-decks": {
+          "d1": {
+            "data": {
+              "cards": [
+                {
+                  "rank": "A",
+                  "suit": "D",
+                  "value": 11
+                }
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "total": 16,
+          "bust": false
+        },
+        "items": {
+          "cards-games": {
+            "draw-g1": {
+              "turn": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "passes the turn to the next player",
+      "identity": "ann",
+      "input": {
+        "action": "stand",
+        "gameId": "stand-g1"
+      },
+      "expect": {
+        "status": 204,
+        "items": {
+          "cards-games": {
+            "stand-g1": {
+              "turn": 1,
+              "status": "playing"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "the last player standing ends the game, and the higher total wins",
+      "identity": "bob",
+      "input": {
+        "action": "stand",
+        "gameId": "stand-g2"
+      },
+      "expect": {
+        "status": 204,
+        "items": {
+          "cards-games": {
+            "stand-g2": {
+              "status": "finished",
+              "winnerId": "bob-id"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "a tie has no winner",
+      "identity": "bob",
+      "input": {
+        "action": "stand",
+        "gameId": "g3"
+      },
+      "expect": {
+        "status": 204,
+        "items": {
+          "cards-games": {
+            "g3": {
+              "status": "finished"
+            }
+          }
+        },
+        "writes": [
+          {
+            "op": "update",
+            "list": "cards-games",
+            "item": "g3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "only the player whose turn it is can stand",
+      "identity": "bob",
+      "input": {
+        "action": "stand",
+        "gameId": "stand-g1"
+      },
+      "expect": {
+        "status": 403,
+        "error": "not your turn",
+        "writes": []
+      }
+    },
+    {
+      "name": "refuses an action it doesn't know",
+      "identity": "ann",
+      "input": {
+        "action": "cheat"
+      },
+      "expect": {
+        "status": 400,
+        "error": "action must be"
+      }
+    }
+  ]
+}

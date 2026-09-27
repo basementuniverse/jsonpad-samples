@@ -1,0 +1,132 @@
+{
+  "$schema": "https://jsonpad.io/schema/sync-v1.json",
+  "scope": "cards",
+  "lists": {
+    "cards-games": {
+      "name": "Twenty-one Games",
+      "description": "One item per game. The page can only read these: every change is made by a flow.",
+      "tags": [
+        "cards"
+      ],
+      "realtime": true,
+      "indexable": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "status",
+          "players",
+          "turn",
+          "deckId"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "waiting",
+              "playing",
+              "finished"
+            ]
+          },
+          "players": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "cards",
+                "total",
+                "state"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "cards": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "rank",
+                      "suit",
+                      "value"
+                    ],
+                    "properties": {
+                      "rank": {
+                        "type": "string"
+                      },
+                      "suit": {
+                        "enum": [
+                          "S",
+                          "H",
+                          "D",
+                          "C"
+                        ]
+                      },
+                      "value": {
+                        "type": "integer"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "state": {
+                  "enum": [
+                    "playing",
+                    "stood",
+                    "bust"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "turn": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deckId": {
+            "type": "string"
+          },
+          "winnerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "indexes": {
+        "status": {
+          "name": "Status",
+          "pointer": "/status",
+          "valueType": "string",
+          "filtering": true,
+          "sorting": true
+        }
+      }
+    },
+    "cards-decks": {
+      "name": "Twenty-one Decks",
+      "description": "One shuffled deck per game. The page's token has no permissions on this list at all: only the flows read it.",
+      "tags": [
+        "cards"
+      ],
+      "indexable": false
+    }
+  },
+  "flows": {
+    "cards": {
+      "flowFile": "flows/cards.flow.json",
+      "flowTestsFile": "flows/cards.tests.json"
+    }
+  }
+}

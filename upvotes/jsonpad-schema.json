@@ -1,0 +1,84 @@
+{
+  "$schema": "https://jsonpad.io/schema/sync-v1.json",
+  "scope": "upvotes",
+  "lists": {
+    "upvotes-posts": {
+      "name": "Upvotes Posts",
+      "description": "The posts. voteCount is kept up to date by the count-votes flow.",
+      "tags": [
+        "upvotes"
+      ],
+      "indexable": true,
+      "rulesFile": "rules/posts.rules",
+      "rulesTestsFile": "rules/posts.tests.json",
+      "schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "voteCount"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140
+          },
+          "voteCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "indexes": {
+        "votes": {
+          "name": "Votes",
+          "pointer": "/voteCount",
+          "valueType": "number",
+          "sorting": true,
+          "defaultOrderDirection": "desc"
+        }
+      }
+    },
+    "upvotes-votes": {
+      "name": "Upvotes Votes",
+      "description": "One item per vote, owned by the player who cast it. Deleting it takes the vote back.",
+      "tags": [
+        "upvotes"
+      ],
+      "indexable": true,
+      "rulesFile": "rules/votes.rules",
+      "rulesTestsFile": "rules/votes.tests.json",
+      "schema": {
+        "type": "object",
+        "required": [
+          "postId",
+          "key"
+        ],
+        "properties": {
+          "postId": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "indexes": {
+        "key": {
+          "name": "Key",
+          "pointer": "/key",
+          "valueType": "string",
+          "alias": true
+        }
+      }
+    }
+  },
+  "flows": {
+    "upvotes-count-votes": {
+      "flowFile": "flows/count-votes.flow.json",
+      "flowTestsFile": "flows/count-votes.tests.json"
+    }
+  }
+}

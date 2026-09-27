@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "name": "upvotes-count-votes",
+  "description": "Keep each post's voteCount up to date as votes are cast and taken back. Clients can't change voteCount themselves: the posts list's write rules refuse it, and this flow's writes skip the rules.",
+  "entry": {
+    "type": "event",
+    "events": [
+      "item.created",
+      "item.deleted"
+    ],
+    "lists": [
+      "upvotes-votes"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "post",
+      "type": "get-item",
+      "list": "upvotes-posts",
+      "item": "input.item.data.postId"
+    },
+    {
+      "id": "still_there",
+      "type": "condition",
+      "when": "steps.post != null"
+    },
+    {
+      "id": "count",
+      "type": "update-item",
+      "list": "upvotes-posts",
+      "item": "steps.post.id",
+      "merge": "{ voteCount: steps.post.data.voteCount + (input.type == \"item.created\" ? 1 : -1) }"
+    }
+  ],
+  "edges": [
+    [
+      "post",
+      "still_there"
+    ],
+    [
+      "still_there",
+      "count",
+      "true"
+    ]
+  ]
+}

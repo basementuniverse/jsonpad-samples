@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upvotes</title>
+  <link rel="stylesheet" href="default.css">
+  <script src="https://cdn.jsdelivr.net/npm/@basementuniverse/jsonpad-sdk@2.3.0/build/jsonpad-sdk.js"></script>
+</head>
+<body>
+  <main class="app">
+    <h1>Upvotes</h1>
+
+    <section class="panel hidden" id="setup">
+      <p>
+        This copy of the sample hasn't been set up yet. Follow the steps in
+        <code>README.md</code>, then paste your token into
+        <code>config.js</code>.
+      </p>
+    </section>
+
+    <section class="panel" id="sign-in">
+      <p>Pick a name. Anyone using the same name is the same person.</p>
+      <form id="sign-in-form">
+        <input
+          type="text"
+          id="name"
+          placeholder="Your name"
+          autocomplete="off"
+          maxlength="32"
+          pattern="[A-Za-z0-9 ._@\-]+"
+          title="Letters, numbers, spaces and . _ @ -"
+          required
+        >
+        <button type="submit">Sign in</button>
+      </form>
+    </section>
+
+    <section class="panel hidden" id="board">
+      <p>Signed in as <strong id="name-label"></strong>.</p>
+      <form id="post-form">
+        <input
+          type="text"
+          id="title"
+          placeholder="Say something"
+          autocomplete="off"
+          maxlength="140"
+          required
+        >
+        <button type="submit">Post</button>
+      </form>
+      <ol class="posts" id="posts"></ol>
+    </section>
+
+    <p class="error hidden" id="error"></p>
+  </main>
+  <footer>
+    <p>
+      A sample app for <a href="https://jsonpad.io">JSONPad</a>. The vote
+      counts are kept up to date by an
+      <a href="https://jsonpad.io/docs/flows-events">event flow</a>, not by
+      this page &mdash; see <a href="flows">the flow</a>.
+    </p>
+  </footer>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

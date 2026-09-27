@@ -1,0 +1,54 @@
+{
+  "tests": [
+    {
+      "name": "a signed-in player can post",
+      "action": "create",
+      "identity": {
+        "id": "ann-id"
+      },
+      "new": {
+        "title": "Hello",
+        "voteCount": 0
+      },
+      "expect": "allow"
+    },
+    {
+      "name": "nobody can post without signing in",
+      "action": "create",
+      "new": {
+        "title": "Hello",
+        "voteCount": 0
+      },
+      "expect": "deny"
+    },
+    {
+      "name": "a new post can't have votes already",
+      "action": "create",
+      "identity": {
+        "id": "ann-id"
+      },
+      "new": {
+        "title": "Hello",
+        "voteCount": 100
+      },
+      "expect": {
+        "fail": "a new post starts with no votes"
+      }
+    },
+    {
+      "name": "nobody can change a post's votes",
+      "action": "update",
+      "identity": {
+        "id": "ann-id"
+      },
+      "old": {
+        "title": "Hello",
+        "voteCount": 0
+      },
+      "merge": {
+        "voteCount": 100
+      },
+      "expect": "deny"
+    }
+  ]
+}

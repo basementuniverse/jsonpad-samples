@@ -1,0 +1,9 @@
+// Anyone signed in can post, and a new post starts with no votes
+allow create "signed in": identity != null;
+
+require create "no votes yet": new.voteCount == 0
+  else "a new post starts with no votes";
+
+// Nobody can change or delete a post, whatever their token allows. voteCount
+// is kept up to date by the count-votes flow, whose writes skip these rules
+allow update, delete "nobody": false;

@@ -1,0 +1,355 @@
+{
+  "version": 1,
+  "name": "cards",
+  "description": "Twenty-one: every move a player makes. The action says which: start a game (shuffling a deck only flows can see), join one, draw a card, or stand.",
+  "entry": {
+    "type": "endpoint",
+    "method": "POST",
+    "path": "cards",
+    "input": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "new-game",
+            "join",
+            "draw",
+            "stand"
+          ]
+        },
+        "gameId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 32
+        }
+      }
+    }
+  },
+  "helpers": "// A standard 52-card deck, in order. JSONPad shuffles it\nlet deck = [{ rank: \"A\", suit: \"S\", value: 11 }, { rank: \"2\", suit: \"S\", value: 2 }, { rank: \"3\", suit: \"S\", value: 3 }, { rank: \"4\", suit: \"S\", value: 4 }, { rank: \"5\", suit: \"S\", value: 5 }, { rank: \"6\", suit: \"S\", value: 6 }, { rank: \"7\", suit: \"S\", value: 7 }, { rank: \"8\", suit: \"S\", value: 8 }, { rank: \"9\", suit: \"S\", value: 9 }, { rank: \"10\", suit: \"S\", value: 10 }, { rank: \"J\", suit: \"S\", value: 10 }, { rank: \"Q\", suit: \"S\", value: 10 }, { rank: \"K\", suit: \"S\", value: 10 }, { rank: \"A\", suit: \"H\", value: 11 }, { rank: \"2\", suit: \"H\", value: 2 }, { rank: \"3\", suit: \"H\", value: 3 }, { rank: \"4\", suit: \"H\", value: 4 }, { rank: \"5\", suit: \"H\", value: 5 }, { rank: \"6\", suit: \"H\", value: 6 }, { rank: \"7\", suit: \"H\", value: 7 }, { rank: \"8\", suit: \"H\", value: 8 }, { rank: \"9\", suit: \"H\", value: 9 }, { rank: \"10\", suit: \"H\", value: 10 }, { rank: \"J\", suit: \"H\", value: 10 }, { rank: \"Q\", suit: \"H\", value: 10 }, { rank: \"K\", suit: \"H\", value: 10 }, { rank: \"A\", suit: \"D\", value: 11 }, { rank: \"2\", suit: \"D\", value: 2 }, { rank: \"3\", suit: \"D\", value: 3 }, { rank: \"4\", suit: \"D\", value: 4 }, { rank: \"5\", suit: \"D\", value: 5 }, { rank: \"6\", suit: \"D\", value: 6 }, { rank: \"7\", suit: \"D\", value: 7 }, { rank: \"8\", suit: \"D\", value: 8 }, { rank: \"9\", suit: \"D\", value: 9 }, { rank: \"10\", suit: \"D\", value: 10 }, { rank: \"J\", suit: \"D\", value: 10 }, { rank: \"Q\", suit: \"D\", value: 10 }, { rank: \"K\", suit: \"D\", value: 10 }, { rank: \"A\", suit: \"C\", value: 11 }, { rank: \"2\", suit: \"C\", value: 2 }, { rank: \"3\", suit: \"C\", value: 3 }, { rank: \"4\", suit: \"C\", value: 4 }, { rank: \"5\", suit: \"C\", value: 5 }, { rank: \"6\", suit: \"C\", value: 6 }, { rank: \"7\", suit: \"C\", value: 7 }, { rank: \"8\", suit: \"C\", value: 8 }, { rank: \"9\", suit: \"C\", value: 9 }, { rank: \"10\", suit: \"C\", value: 10 }, { rank: \"J\", suit: \"C\", value: 10 }, { rank: \"Q\", suit: \"C\", value: 10 }, { rank: \"K\", suit: \"C\", value: 10 }];\n\n// A hand's total: aces count 11, or 1 if 11 would go over 21\nfunction aces(cards) = count(cards, c => c.rank == \"A\");\nfunction score(cards) =\n  sum(map(cards, c => c.value)) - 10 * min([\n    aces(cards),\n    max([0, ceil((sum(map(cards, c => c.value)) - 21) / 10)])\n  ]);\n\n// A player with one more card\nfunction drawn(p, card) = {\n  id: p.id,\n  name: p.name,\n  cards: p.cards + [card],\n  total: score(p.cards + [card]),\n  state: score(p.cards + [card]) > 21 ? \"bust\" : \"playing\"\n};\n\n// A player who has stood\nfunction stood(p) = {\n  id: p.id,\n  name: p.name,\n  cards: p.cards,\n  total: p.total,\n  state: \"stood\"\n};\n\n// The winner of a finished game: the highest total that isn't bust\nfunction beats(x, y) = x.state != \"bust\" && (y.state == \"bust\" || x.total > y.total);\nfunction winner(ps) = beats(ps[0], ps[1]) ? ps[0].id : (beats(ps[1], ps[0]) ? ps[1].id : null);",
+  "nodes": [
+    {
+      "id": "signed_in",
+      "type": "require",
+      "when": "identity != null",
+      "status": 401,
+      "message": "sign in first"
+    },
+    {
+      "id": "action",
+      "type": "switch",
+      "cases": [
+        {
+          "when": "input.action == \"new-game\"",
+          "port": "new-game"
+        },
+        {
+          "when": "input.action == \"join\"",
+          "port": "join"
+        },
+        {
+          "when": "input.action == \"draw\"",
+          "port": "draw"
+        },
+        {
+          "when": "input.action == \"stand\"",
+          "port": "stand"
+        }
+      ]
+    },
+    {
+      "id": "unknown",
+      "type": "require",
+      "when": "false",
+      "status": 400,
+      "message": "action must be new-game, join, draw or stand"
+    },
+    {
+      "id": "named",
+      "type": "require",
+      "when": "isString(input.name) && length(trim(input.name)) > 0",
+      "status": 400,
+      "message": "give your name"
+    },
+    {
+      "id": "shuffled",
+      "type": "create-item",
+      "list": "cards-decks",
+      "data": "{ source: deck, cards: \"$jsonpad-var:random-shuffle(/source)\" }"
+    },
+    {
+      "id": "created",
+      "type": "create-item",
+      "list": "cards-games",
+      "data": "{ status: \"waiting\", players: [{ id: identity.id, name: input.name, cards: [], total: 0, state: \"playing\" }], turn: 0, deckId: steps.shuffled.id, winnerId: null }"
+    },
+    {
+      "id": "started",
+      "type": "respond",
+      "status": 201,
+      "body": "{ gameId: steps.created.id }"
+    },
+    {
+      "id": "join_game",
+      "type": "get-item",
+      "list": "cards-games",
+      "item": "input.gameId",
+      "required": true
+    },
+    {
+      "id": "waiting",
+      "type": "require",
+      "when": "steps.join_game.data.status == \"waiting\"",
+      "status": 409,
+      "message": "that game has already started"
+    },
+    {
+      "id": "not_in_it",
+      "type": "require",
+      "when": "!(identity.id in map(steps.join_game.data.players, p => p.id))",
+      "status": 409,
+      "message": "you're already in that game"
+    },
+    {
+      "id": "join",
+      "type": "update-item",
+      "list": "cards-games",
+      "item": "steps.join_game.id",
+      "merge": "{ players: steps.join_game.data.players + [{ id: identity.id, name: input.name, cards: [], total: 0, state: \"playing\" }], status: \"playing\" }",
+      "ifVersion": "steps.join_game.version"
+    },
+    {
+      "id": "joined",
+      "type": "respond",
+      "body": "{ gameId: steps.join_game.id }"
+    },
+    {
+      "id": "draw_game",
+      "type": "get-item",
+      "list": "cards-games",
+      "item": "input.gameId",
+      "required": true
+    },
+    {
+      "id": "draw_turn",
+      "type": "require",
+      "when": "steps.draw_game.data.status == \"playing\" && steps.draw_game.data.players[steps.draw_game.data.turn].id == identity.id",
+      "status": 403,
+      "message": "it's not your turn"
+    },
+    {
+      "id": "deck",
+      "type": "get-item",
+      "list": "cards-decks",
+      "item": "steps.draw_game.data.deckId",
+      "required": true
+    },
+    {
+      "id": "card",
+      "type": "compute",
+      "value": "first(steps.deck.data.cards)"
+    },
+    {
+      "id": "not_empty",
+      "type": "require",
+      "when": "steps.card != null",
+      "status": 409,
+      "message": "the deck is empty"
+    },
+    {
+      "id": "take",
+      "type": "update-item",
+      "list": "cards-decks",
+      "item": "steps.deck.id",
+      "patch": "[{ op: 'remove', path: '/cards/0' }]"
+    },
+    {
+      "id": "with_card",
+      "type": "compute",
+      "value": "map(steps.draw_game.data.players, p => p.id == identity.id ? drawn(p, steps.card) : p)"
+    },
+    {
+      "id": "me",
+      "type": "compute",
+      "value": "steps.with_card[steps.draw_game.data.turn]"
+    },
+    {
+      "id": "draw_over",
+      "type": "compute",
+      "value": "steps.me.state == \"bust\" && steps.draw_game.data.turn == length(steps.with_card) - 1"
+    },
+    {
+      "id": "draw_save",
+      "type": "update-item",
+      "list": "cards-games",
+      "item": "steps.draw_game.id",
+      "merge": "{ players: steps.with_card, turn: steps.me.state == \"bust\" ? steps.draw_game.data.turn + 1 : steps.draw_game.data.turn, status: steps.draw_over ? \"finished\" : \"playing\", winnerId: steps.draw_over ? winner(steps.with_card) : null }",
+      "ifVersion": "steps.draw_game.version"
+    },
+    {
+      "id": "dealt",
+      "type": "respond",
+      "body": "{ card: steps.card, total: steps.me.total, bust: steps.me.state == \"bust\" }"
+    },
+    {
+      "id": "stand_game",
+      "type": "get-item",
+      "list": "cards-games",
+      "item": "input.gameId",
+      "required": true
+    },
+    {
+      "id": "stand_turn",
+      "type": "require",
+      "when": "steps.stand_game.data.status == \"playing\" && steps.stand_game.data.players[steps.stand_game.data.turn].id == identity.id",
+      "status": 403,
+      "message": "it's not your turn"
+    },
+    {
+      "id": "standing",
+      "type": "compute",
+      "value": "map(steps.stand_game.data.players, p => p.id == identity.id ? stood(p) : p)"
+    },
+    {
+      "id": "stand_over",
+      "type": "compute",
+      "value": "steps.stand_game.data.turn == length(steps.standing) - 1"
+    },
+    {
+      "id": "stand_save",
+      "type": "update-item",
+      "list": "cards-games",
+      "item": "steps.stand_game.id",
+      "merge": "{ players: steps.standing, turn: steps.stand_game.data.turn + 1, status: steps.stand_over ? \"finished\" : \"playing\", winnerId: steps.stand_over ? winner(steps.standing) : null }",
+      "ifVersion": "steps.stand_game.version"
+    },
+    {
+      "id": "stood",
+      "type": "respond",
+      "status": 204
+    }
+  ],
+  "edges": [
+    [
+      "signed_in",
+      "action"
+    ],
+    [
+      "action",
+      "named",
+      "new-game"
+    ],
+    [
+      "action",
+      "join_game",
+      "join"
+    ],
+    [
+      "action",
+      "draw_game",
+      "draw"
+    ],
+    [
+      "action",
+      "stand_game",
+      "stand"
+    ],
+    [
+      "action",
+      "unknown",
+      "default"
+    ],
+    [
+      "named",
+      "shuffled"
+    ],
+    [
+      "shuffled",
+      "created"
+    ],
+    [
+      "created",
+      "started"
+    ],
+    [
+      "join_game",
+      "waiting"
+    ],
+    [
+      "waiting",
+      "not_in_it"
+    ],
+    [
+      "not_in_it",
+      "join"
+    ],
+    [
+      "join",
+      "joined"
+    ],
+    [
+      "draw_game",
+      "draw_turn"
+    ],
+    [
+      "draw_turn",
+      "deck"
+    ],
+    [
+      "deck",
+      "card"
+    ],
+    [
+      "card",
+      "not_empty"
+    ],
+    [
+      "not_empty",
+      "take"
+    ],
+    [
+      "take",
+      "with_card"
+    ],
+    [
+      "with_card",
+      "me"
+    ],
+    [
+      "me",
+      "draw_over"
+    ],
+    [
+      "draw_over",
+      "draw_save"
+    ],
+    [
+      "draw_save",
+      "dealt"
+    ],
+    [
+      "stand_game",
+      "stand_turn"
+    ],
+    [
+      "stand_turn",
+      "standing"
+    ],
+    [
+      "standing",
+      "stand_over"
+    ],
+    [
+      "stand_over",
+      "stand_save"
+    ],
+    [
+      "stand_save",
+      "stood"
+    ]
+  ]
+}
